@@ -1,0 +1,24 @@
+
+executor: "LocalKubernetesExecutor"
+
+dags:
+  gitSync:
+    enabled: false
+  persistence:
+    enabled: true
+    existingClaim: dags-pvc
+
+statsd:
+  enabled: false
+
+env:
+  - name: AIRFLOW__WEBSERVER__SHOW_TRIGGER_FORM_IF_NO_PARMS
+    value: "True"
+  - name: AIRFLOW__CORE__LOAD_EXAMPLES
+    value: "True"
+  - name: AIRFLOW__CORE__LOGGING_LEVEL
+    value: "INFO"
+  - name: AIRFLOW__WEBSERVER__SHOW_TRIGGER_FORM_IF_NO_PARAMS
+    value: "True"
+  - name: AIRFLOW_VAR_ENVIRONMENT
+    value: "local"
