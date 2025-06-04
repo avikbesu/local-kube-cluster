@@ -39,35 +39,14 @@ This will:
 
 ### Individual Commands
 
-- **Check/install dependencies only:**
-  ```sh
-  make check-deps
-  ```
-
-- **Start the cluster:**
-  ```sh
-  make start-cluster
-  ```
-
-- **Deploy Airflow:**
-  ```sh
-  make deploy-airflow
-  ```
-
-- **Deploy MinIO:**
-  ```sh
-  make deploy-minio
-  ```
-
-- **Stop Airflow port-forward (if running):**
-  ```sh
-  make stop-airflow-port-forward
-  ```
-
-- **Stop and delete the cluster:**
-  ```sh
-  make stop-cluster
-  ```
+| Command                         | Description                           |
+|---------------------------------|---------------------------------------|
+| `make check-deps`               | Check/install dependencies only       |
+| `make start-cluster`            | Start the cluster                     |
+| `make deploy-airflow`           | Deploy Airflow                        |
+| `make deploy-minio`             | Deploy MinIO                          |
+| `make stop-airflow-port-forward`| Stop Airflow port-forward (if running)|
+| `make stop-cluster`             | Stop and delete the cluster           |
 
 ## Accessing Airflow UI
 
