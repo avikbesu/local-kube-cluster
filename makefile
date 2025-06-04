@@ -35,6 +35,12 @@ deploy-airflow:
 	@echo "kubectl port-forward svc/airflow-webserver 8080:8080 -n airflow"
 	@echo "Visit http://localhost:8080 to access the Airflow UI."
 
+uninstall-airflow:
+	@echo "Uninstalling Airflow..."
+	@helm uninstall airflow --namespace airflow
+	@kubectl delete namespace airflow
+	@echo "Airflow uninstalled successfully."
+
 deploy-minio:
 	@echo "Deploying MinIO with Helm into 'airflow' namespace..."
 	@helm repo add minio https://charts.min.io/
