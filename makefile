@@ -1,6 +1,6 @@
-.PHONY: all check-deps install start-cluster stop-cluster deploy-airflow
+.PHONY: all check-deps install start-cluster stop-cluster deploy-airflow deploy-minio stop-airflow-port-forward
 
-all: check-deps install start-cluster deploy-airflow
+all: check-deps install start-cluster deploy-airflow deploy-minio
 
 check-deps:
 	@command -v kubectl >/dev/null 2>&1 || { echo >&2 "kubectl not found. Installing..."; curl -LO "https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl"; chmod +x kubectl; sudo mv kubectl /usr/local/bin/; }
@@ -34,3 +34,12 @@ deploy-airflow:
 	@echo "Airflow deployed successfully. You can access it via port-forwarding:"
 	@echo "kubectl port-forward svc/airflow-webserver 8080:8080 -n airflow"
 	@echo "Visit http://localhost:8080 to access the Airflow UI."
+
+deploy-minio:
+	@echo "Deploying MinIO with Helm into 'airflow' namespace..."
+	@helm repo add minio https://charts.min.io/
+	@helm repo update
+	@helm upgrade --install minio minio/minio --namespace minio --create-namespace -f minio/values.yaml
+	@echo "MinIO deployed successfully. You can access it via port-forwarding:"
+	@echo "kubectl port-forward svc/minio 9001:9001 -n minio"
+	@echo "Visit http://localhost:9001 to access the MinIO UI."
