@@ -35,12 +35,6 @@ deploy-airflow:
 	@echo "kubectl port-forward svc/airflow-webserver 8080:8080 -n airflow"
 	@echo "Visit http://localhost:8080 to access the Airflow UI."
 
-uninstall-airflow:
-	@echo "Uninstalling Airflow..."
-	@helm uninstall airflow --namespace airflow
-	@kubectl delete namespace airflow
-	@echo "Airflow uninstalled successfully."
-
 deploy-minio:
 	@echo "Deploying MinIO with Helm into 'airflow' namespace..."
 	@helm repo add minio https://charts.min.io/
@@ -60,4 +54,23 @@ deploy-postgres:
 	@echo "You can access PostgreSQL using the following command:"
 	@echo "kubectl port-forward svc/postgres 5432:5432 -n db"
 	@echo "Visit http://localhost:5432 to access the PostgreSQL database."
-	@
+
+uninstall-airflow:
+	@echo "Uninstalling Airflow..."
+	@helm uninstall airflow --namespace airflow
+	@kubectl delete namespace airflow
+	@echo "Airflow uninstalled successfully."
+uninstall-minio:
+	@echo "Uninstalling MinIO..."
+	@helm uninstall minio --namespace minio
+	@kubectl delete namespace minio
+	@echo "MinIO uninstalled successfully."
+uninstall-postgres:
+	@echo "Uninstalling PostgreSQL..."
+	@helm uninstall postgres --namespace db
+	@kubectl delete namespace db
+	@echo "PostgreSQL uninstalled successfully."
+	
+.PHONY: uninstall
+uninstall: uninstall-airflow uninstall-minio uninstall-postgres
+	@echo "All components uninstalled successfully."
