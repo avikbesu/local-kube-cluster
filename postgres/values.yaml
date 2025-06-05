@@ -1,0 +1,22 @@
+auth:
+  username: myuser
+  password: mysecurepassword
+  database: mydatabase
+
+primary:
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: "standard"  # Set to your cluster's storage class
+
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+
+service:
+  type: ClusterIP
+  port: 5432

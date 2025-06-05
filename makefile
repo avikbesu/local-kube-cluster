@@ -1,6 +1,6 @@
-.PHONY: all check-deps install start-cluster stop-cluster deploy-airflow deploy-minio stop-airflow-port-forward
+.PHONY: all check-deps install start-cluster stop-cluster deploy-airflow deploy-minio stop-airflow-port-forward uninstall-airflow deploy-postgres
 
-all: check-deps install start-cluster deploy-airflow deploy-minio
+all: check-deps install start-cluster deploy-airflow deploy-minio deploy-postgres
 
 check-deps:
 	@command -v kubectl >/dev/null 2>&1 || { echo >&2 "kubectl not found. Installing..."; curl -LO "https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl"; chmod +x kubectl; sudo mv kubectl /usr/local/bin/; }
@@ -16,9 +16,9 @@ start-cluster:
 
 stop-airflow-port-forward:
 	@echo "Stopping any running Airflow port-forward processes..."
-	@pkill -f "kubectl port-forward svc/airflow-webserver" || echo "No port-forward process found."
+# @pkill -f "kubectl port-forward svc/airflow-webserver" || echo "No port-forward process found."
 
-stop-cluster: stop-airflow-port-forward
+stop-cluster: 
 	@echo "Stopping and deleting kind cluster..."
 	@kind delete cluster --name local-cluster
 
@@ -49,3 +49,15 @@ deploy-minio:
 	@echo "MinIO deployed successfully. You can access it via port-forwarding:"
 	@echo "kubectl port-forward svc/minio 9001:9001 -n minio"
 	@echo "Visit http://localhost:9001 to access the MinIO UI."
+
+deploy-postgres:
+	@echo "Deploying PostgreSQL with Helm into 'db' namespace..."
+	@helm repo add bitnami https://charts.bitnami.com/bitnami
+	@helm repo update
+	@kubectl create namespace db >/dev/null 2>&1 || echo "Namespace 'db' already exists."
+	@helm upgrade --install postgres bitnami/postgresql --namespace db --create-namespace -f postgres/values.yaml
+	@echo "PostgreSQL deployed successfully."
+	@echo "You can access PostgreSQL using the following command:"
+	@echo "kubectl port-forward svc/postgres 5432:5432 -n db"
+	@echo "Visit http://localhost:5432 to access the PostgreSQL database."
+	@
