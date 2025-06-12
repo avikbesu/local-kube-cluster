@@ -1,13 +1,13 @@
 .PHONY: all check-deps install start-cluster stop-cluster deploy-airflow deploy-minio stop-airflow-port-forward uninstall-airflow deploy-postgres
 
-all: check-deps install start-cluster deploy-airflow deploy-minio deploy-postgres
+all: install start-cluster deploy
 
 check-deps:
 	@command -v kubectl >/dev/null 2>&1 || { echo >&2 "kubectl not found. Installing..."; curl -LO "https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl"; chmod +x kubectl; sudo mv kubectl /usr/local/bin/; }
 	@command -v kind >/dev/null 2>&1 || { echo >&2 "kind not found. Installing..."; curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.23.0/kind-linux-amd64; chmod +x ./kind; sudo mv ./kind /usr/local/bin/kind; }
 	@command -v helm >/dev/null 2>&1 || { echo >&2 "helm not found. Installing..."; curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash; }
 
-install:
+install: check-deps
 	@echo "All dependencies are installed."
 
 start-cluster:
@@ -54,6 +54,9 @@ deploy-postgres:
 	@echo "You can access PostgreSQL using the following command:"
 	@echo "kubectl port-forward svc/postgres 5432:5432 -n db"
 	@echo "Visit http://localhost:5432 to access the PostgreSQL database."
+
+deploy: deploy-airflow deploy-minio deploy-postgres
+	@echo "All components deployed successfully."
 
 uninstall-airflow:
 	@echo "Uninstalling Airflow..."
