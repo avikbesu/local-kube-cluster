@@ -1,5 +1,5 @@
 
-executor: "LocalKubernetesExecutor"
+executor: "KubernetesExecutor"  # or "CeleryExecutor", "LocalExecutor", etc.
 
 dags:
   gitSync:
@@ -12,8 +12,6 @@ statsd:
   enabled: false
 
 env:
-  - name: AIRFLOW__WEBSERVER__SHOW_TRIGGER_FORM_IF_NO_PARMS
-    value: "True"
   - name: AIRFLOW__CORE__LOAD_EXAMPLES
     value: "True"
   - name: AIRFLOW__CORE__LOGGING_LEVEL

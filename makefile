@@ -32,7 +32,7 @@ deploy-airflow:
 	@kubectl apply -f airflow/dags_pvc.yaml -n airflow
 	@helm upgrade --install airflow apache-airflow/airflow --namespace airflow --create-namespace -f airflow/values.yaml
 	@echo "Airflow deployed successfully. You can access it via port-forwarding:"
-	@echo "kubectl port-forward svc/airflow-webserver 8080:8080 -n airflow"
+	@echo "kubectl port-forward svc/airflow-api-server 8080:8080 -n airflow"
 	@echo "Visit http://localhost:8080 to access the Airflow UI."
 
 deploy-minio:
