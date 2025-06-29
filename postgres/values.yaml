@@ -6,7 +6,7 @@ auth:
 primary:
   persistence:
     enabled: true
-    size: 8Gi
+    size: 1Gi
     storageClass: "standard"  # Set to your cluster's storage class
 
   resources:
