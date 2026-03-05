@@ -1,5 +1,5 @@
 
-executor: "KubernetesExecutor"  # or "CeleryExecutor", "LocalExecutor", etc.
+executor: "LocalExecutor"  # or "CeleryExecutor", "LocalExecutor", "KubernetesExecutor" etc.
 
 dags:
   gitSync:
@@ -9,22 +9,53 @@ dags:
     existingClaim: dags-pvc
 
 statsd:
-  enabled: false
+  enabled: true
 
 env:
   - name: AIRFLOW__CORE__LOAD_EXAMPLES
-    value: "True"
+    value: "False"
   - name: AIRFLOW__CORE__LOGGING_LEVEL
     value: "INFO"
   - name: AIRFLOW__WEBSERVER__SHOW_TRIGGER_FORM_IF_NO_PARAMS
     value: "True"
   - name: AIRFLOW_VAR_ENVIRONMENT
     value: "local"
+  - name: AIRFLOW__KUBERNETES__XCOM_SIDECAR_IMAGE
+    value: "alpine:3.19"
+
+# workers:
+#   # Ensures the XCom sidecar image (alpine) can be pulled
+#   extraEnv:
+#     - name: AIRFLOW__KUBERNETES__XCOM_SIDECAR_IMAGE
+#       value: "alpine:3.19"
+
+# kubernetes:
+#   # Namespace where KubernetesJobOperator will create Jobs
+#   namespace: "airflow"
+#   # XCom sidecar container image
+#   airflow_xcom_sidecar_image: "alpine:3.19"
+#   airflow_xcom_sidecar_resources:
+#     requests:
+#       memory: "64Mi"
+#       cpu: "50m"
+#     limits:
+#       memory: "128Mi"
+#       cpu: "100m"
+
+#   worker_pods_creation_batch_size: 10
+#   delete_worker_pods: true
+#   delete_worker_pods_on_failure: false
 
 workers:
   persistence:
     # enabled: true
     size: 1Gi
+  # extraEnv:
+  #   - name: AIRFLOW__KUBERNETES__XCOM_SIDECAR_IMAGE
+  #     value: "alpine:3.19"
+
+statsd:
+  enabled: false
 
 triggerer:
   persistence:

@@ -1,5 +1,6 @@
 .PHONY: start check-deps install start-cluster stop-cluster 
 
+up: start
 start: install start-cluster deploy
 default: start
 
@@ -15,6 +16,7 @@ start-cluster:
 	@echo "Starting single-node Kubernetes cluster with kind..."
 	@kind create cluster --name local-cluster --wait 60s --config kind-config.yaml >/dev/null 2>&1 || echo "Cluster may already exist."
 
+down: stop
 stop: 
 	@echo "Stopping and deleting kind cluster..."
 	@kind delete cluster --name local-cluster
@@ -23,13 +25,23 @@ stop:
 .PHONY: deploy-airflow deploy-minio deploy-postgres deploy
 deploy-airflow:
 	@echo "Creating 'airflow' namespace if it does not exist..."
-	@kubectl get namespace airflow >logs/deploy-airflow.log 2>&1 || kubectl create namespace airflow
+	@rm logs/deploy-airflow.log
+	@mkdir -p logs
+	@kubectl get namespace airflow || kubectl create namespace airflow
 	@echo "Deploying Apache Airflow with Helm into 'airflow' namespace..."
 	@helm repo add apache-airflow https://airflow.apache.org
 	@helm repo update
 	@kubectl apply -f airflow/dags_pv.yaml -n airflow >>logs/deploy-airflow.log 2>&1
 	@kubectl apply -f airflow/dags_pvc.yaml -n airflow >>logs/deploy-airflow.log 2>&1
-	@helm upgrade --install airflow apache-airflow/airflow --namespace airflow --create-namespace -f airflow/values.yaml >>logs/deploy-airflow.log 2>&1
+	@helm upgrade --install airflow apache-airflow/airflow \
+		--namespace airflow \
+		--create-namespace \
+		--timeout 10m0s \
+		--set createUserJob.useHelmHooks=false \
+		--set migrateDatabaseJob.useHelmHooks=false \
+		-f airflow/values.yaml >>logs/deploy-airflow.log 2>&1
+	@echo "Applying RBAC permissions for KubernetesPodOperator / KubernetesJobOperator..."
+	@kubectl apply -f airflow/rbac.yaml >>logs/deploy-airflow.log 2>&1
 	@echo "Airflow deployed successfully. You can access it via port-forwarding:"
 	@echo "kubectl port-forward svc/airflow-api-server 8080:8080 -n airflow"
 	@echo "Visit http://localhost:8080 to access the Airflow UI."
@@ -61,6 +73,8 @@ deploy: deploy-airflow deploy-minio deploy-postgres
 .PHONY: remove-airflow remove-minio remove-postgres remove
 remove-airflow:
 	@helm uninstall airflow --namespace airflow >>logs/uninstall.log 2>&1
+	@kubectl delete -f airflow/dags_pvc.yaml -n airflow >>logs/uninstall.log 2>&1
+	@kubectl delete -f airflow/dags_pv.yaml -n airflow >>logs/uninstall.log 2>&1
 	@kubectl delete namespace airflow >>logs/uninstall.log 2>&1
 	@echo "Airflow removed successfully."
 remove-minio:
@@ -75,3 +89,23 @@ remove-postgres:
 .PHONY: remove
 remove: remove-airflow remove-minio remove-postgres
 	@echo "All components removed successfully."
+
+
+.PHONY: help
+help:
+	@echo "Usage:"
+	@echo "	make start					- Start the cluster and deploy components"
+	@echo "	make check-deps		 - Check and install dependencies"
+	@echo "	make install				- Install dependencies"
+	@echo "	make start-cluster	- Start the Kubernetes cluster with kind"
+	@echo "	make stop-cluster	 - Stop and delete the Kubernetes cluster"
+	@echo "	make deploy				 - Deploy all components (Airflow, MinIO, PostgreSQL)"
+	@echo "	make remove				 - Remove all deployed components"
+	@echo "	make help					 - Show this help message"
+	@echo "	make deploy-airflow - Deploy Apache Airflow"
+	@echo "	make deploy-minio	 - Deploy MinIO"
+	@echo "	make deploy-postgres - Deploy PostgreSQL"
+	@echo "	make remove-airflow - Remove Apache Airflow"
+	@echo "	make remove-minio	 - Remove MinIO"
+	@echo "	make remove-postgres - Remove PostgreSQL"
+

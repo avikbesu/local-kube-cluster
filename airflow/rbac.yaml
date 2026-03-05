@@ -1,0 +1,66 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: airflow-scheduler-job-role
+  namespace: airflow
+rules:
+  # Required for KubernetesPodOperator and KubernetesJobOperator
+  - apiGroups: ["batch"]
+    resources: ["jobs", "jobs/status"]
+    verbs: ["create", "get", "list", "watch", "delete", "patch", "update"]
+  # Required for pod log streaming and status checks
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "pods/exec"]
+    verbs: ["create", "get", "list", "watch", "delete", "patch", "update"]
+  # Required for reading XCom via pod exec
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create", "get"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: airflow-scheduler-job-rolebinding
+  namespace: airflow
+subjects:
+  - kind: ServiceAccount
+    name: airflow-scheduler       # Default SA name from the Airflow Helm chart
+    namespace: airflow
+roleRef:
+  kind: Role
+  name: airflow-scheduler-job-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Workers also need job/pod permissions when using KubernetesExecutor
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: airflow-worker-job-rolebinding
+  namespace: airflow
+subjects:
+  - kind: ServiceAccount
+    name: airflow-worker           # Default SA name from the Airflow Helm chart
+    namespace: airflow
+roleRef:
+  kind: Role
+  name: airflow-scheduler-job-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Triggerer needs job/status permissions to monitor deferred tasks
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: airflow-triggerer-job-rolebinding
+  namespace: airflow
+subjects:
+  - kind: ServiceAccount
+    name: airflow-triggerer        # Default SA name from the Airflow Helm chart
+    namespace: airflow
+roleRef:
+  kind: Role
+  name: airflow-scheduler-job-role
+  apiGroup: rbac.authorization.k8s.io
